@@ -1,126 +1,60 @@
 <?php
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
+require 'vendor/autoload.php';
 
+// Only process POST requests.
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    // Only process POST reqeusts.
+    // Get the form fields and remove whitespace.
 
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // NAME
+    $name = isset($_POST["name"]) ? trim($_POST["name"]) : "hi";
 
-        // Get the form fields and remove MORALspace.
+    // EMAIL
+    $email = filter_var(trim($_POST["email"]), FILTER_SANITIZE_EMAIL);
 
-        // NAME
+    // IF MESSAGE SET
+    $message = isset($_POST["message"]) ? trim($_POST["message"]) : "hi";
 
-        if(isset($_POST["name"])){
-            $name = trim($_POST["name"]);
-        }else{
-            $name = "hi";
-        }
-
-        // EMAIL
-        $email = filter_var(trim($_POST["email"]), FILTER_SANITIZE_EMAIL);
-
-        // IF MESSAGE SET
-        if(isset($_POST["message"])){
-            $message = trim($_POST["message"]);
-        }else{
-            $message = "hi";
-        }
-
-
-        // Check that data was sent to the mailer.
-
-        if ( empty($name) OR empty($message) OR !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-
-            // Set a 400 (bad request) response code and exit.
-
-            http_response_code(400);
-
-            echo "Please complete the form and try again.";
-
-            exit;
-
-        }
-
-
-
-        // Set the recipient email address.
-
-        // FIXME: Update this to your desired email address.
-
-        $recipient = "mun599@gmail.com";
-
-
-
-        // Set the email subject.
-
-        $sender = "New contact from $name";
-
-
-
-        //Email Header
-
-        $head = " /// Webtend Omio HTML \\\ ";
-
-
-
-        // Build the email content.
-
-        $email_content = "$head\n\n\n";
-
-        if(isset($_POST["name"])){
-            $email_content .= "Name: $name\n";
-        }
-
-        
-        $email_content .= "Email: $email\n\n";
-
-
-        // IF SET Message
-        if(isset($_POST["message"])){
-            $email_content .= "Message:\n$message\n";
-        }
-
-
-        // Build the email headers.
-
-        if(isset($_POST["name"])){
-            $email_headers = "From: $name <$email>";
-        }
-
-
-        // Send the email.
-
-        if (mail($recipient, $sender, $email_content, $email_headers)) {
-
-            // Set a 200 (okay) response code.
-
-            http_response_code(200);
-
-            echo "Thank You! Your message has been sent.";
-
-        } else {
-
-            // Set a 500 (internal server error) response code.
-
-            http_response_code(500);
-
-            echo "Oops! Something went wrong and we couldn't send your message.";
-
-        }
-
-
-
-    } else {
-
-        // Not a POST request, set a 403 (forbidden) response code.
-
-        http_response_code(403);
-
-        echo "There was a problem with your submission, please try again.";
-
+    // Check that data was sent to the mailer.
+    if (empty($name) || empty($message) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        // Set a 400 (bad request) response code and exit.
+        http_response_code(400);
+        echo "Please complete the form and try again.";
+        exit;
     }
 
+    $mail = new PHPMailer(true);
 
+    try {
+        // SMTP Configuration
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com'; // Use your SMTP server
+        $mail->SMTPAuth = true;
+        $mail->Username = 'works.virat@gmail.com'; // Your email
+        $mail->Password = 'dtaq ccok pqno pugk'; // Your email password or app password
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 587;
 
+        // Email Content
+        $mail->setFrom('your-email@gmail.com', 'Your Name');
+        $mail->addAddress('works.virat@gmail.com');
+        $mail->Subject = "New contact from $name";
+        $mail->Body = "Name: $name\nEmail: $email\nMessage:\n$message";
+
+        $mail->send();
+        http_response_code(200);
+        echo "Thank You! Your message has been sent.";
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+    }
+} else {
+    // Not a POST request, set a 403 (forbidden) response code.
+    http_response_code(403);
+    echo "There was a problem with your submission, please try again.";
+}
 ?>
 
